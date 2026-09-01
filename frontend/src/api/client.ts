@@ -2,6 +2,7 @@ import axios from "axios";
 import type {
   JobResultResponse,
   JobStatusResponse,
+  MapAnalysisRequest,
   QueryRequest,
   UploadResponse,
 } from "../types";
@@ -21,6 +22,13 @@ export async function uploadImage(file: File): Promise<UploadResponse> {
 
 export async function submitQuery(req: QueryRequest): Promise<JobStatusResponse> {
   const { data } = await api.post<JobStatusResponse>("/query", req);
+  return data;
+}
+
+export async function submitMapAnalysis(
+  req: MapAnalysisRequest,
+): Promise<JobStatusResponse> {
+  const { data } = await api.post<JobStatusResponse>("/map/analyze", req);
   return data;
 }
 

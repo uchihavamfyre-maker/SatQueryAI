@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ImageUploadPanel } from "./components/ImageUploadPanel";
 import { QueryBar } from "./components/QueryBar";
 import { ResultsPanel } from "./components/ResultsPanel";
 import { MapViewer } from "./components/MapViewer";
-import { pollUntilDone, submitQuery } from "./api/client";
+import { pollUntilDone, submitMapAnalysis, submitQuery } from "./api/client";
 import type {
   InputRole,
   JobResultResponse,
@@ -18,24 +18,23 @@ export default function App() {
   const [result, setResult] = useState<JobResultResponse | null>(null);
   const [running, setRunning] = useState(false);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
 
-  const handleQuery = async (query: string) => {
-    if (images.length === 0) {
-      setGlobalError("Upload at least one image before querying.");
-      return;
-    }
+  const runJob = useCallback(async (
+    submit: (jobId: string) => Promise<JobStatusResponse>,
+  ) => {
     setGlobalError(null);
     setResult(null);
     setRunning(true);
 
     const jobId = uuidv4();
-    const imageRoles: Record<string, InputRole> = {};
-    images.forEach((img) => {
-      imageRoles[img.uploadId] = img.role;
-    });
-
     try {
-      await submitQuery({ job_id: jobId, query, image_roles: imageRoles });
+      const initialStatus = await submit(jobId);
+      setJobStatus(initialStatus);
 
       const finalResult = await pollUntilDone(
         jobId,
@@ -50,7 +49,30 @@ export default function App() {
     } finally {
       setRunning(false);
     }
+  }, []);
+
+  const handleQuery = (requestQuery: string) => {
+    if (images.length === 0) {
+      setGlobalError("Upload an image or click the map to use public Sentinel-2 imagery.");
+      return;
+    }
+    const imageRoles: Record<string, InputRole> = {};
+    images.forEach((img) => {
+      imageRoles[img.uploadId] = img.role;
+    });
+    void runJob((jobId) =>
+      submitQuery({ job_id: jobId, query: requestQuery, image_roles: imageRoles }),
+    );
   };
+
+  const handleMapClick = useCallback((latitude: number, longitude: number) => {
+    if (running) return;
+    const requestQuery = query.trim() || "What land cover type dominates this location?";
+    setSelectedLocation({ latitude, longitude });
+    void runJob((jobId) =>
+      submitMapAnalysis({ job_id: jobId, query: requestQuery, latitude, longitude }),
+    );
+  }, [query, running, runJob]);
 
   return (
     <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "system-ui, sans-serif" }}>
@@ -105,7 +127,12 @@ export default function App() {
 
           <section>
             <SectionHeader>Query</SectionHeader>
-            <QueryBar onSubmit={handleQuery} disabled={running} />
+            <QueryBar
+              onSubmit={handleQuery}
+              disabled={running}
+              value={query}
+              onChange={setQuery}
+            />
           </section>
 
           {globalError && (
@@ -129,6 +156,9 @@ export default function App() {
           <MapViewer
             evidence={result?.evidence ?? null}
             uploadedImages={images}
+            onMapClick={handleMapClick}
+            selectedLocation={selectedLocation}
+            analysisPending={running}
           />
         </div>
       </div>

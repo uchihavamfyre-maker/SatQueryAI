@@ -1,6 +1,6 @@
 """
 SatQuery AI — FastAPI Backend
-Endpoints: /upload, /query, /job/{id}/status, /job/{id}/result, /job/{id}/trace
+Endpoints: /upload, /query, /map/analyze, /job/{id}/status, /job/{id}/result, /job/{id}/trace
 """
 from __future__ import annotations
 import hashlib
@@ -21,9 +21,10 @@ from app.agent.controller import get_controller
 from app.config import settings
 from app.models.schemas import (
     InputFormat, InputModality, JobResultResponse, JobStatus,
-    JobStatusResponse, QueryRequest, UploadResponse,
+    JobStatusResponse, MapAnalysisRequest, QueryRequest, UploadResponse,
 )
 from app.preprocessing.geo_pipeline import detect_format, detect_modality, ingest
+from app.services.imagery import ImageryUnavailable, fetch_sentinel_tile
 from app.storage import trace_store
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -189,6 +190,71 @@ async def submit_query(request: QueryRequest, background_tasks: BackgroundTasks)
         created_at=now,
         updated_at=now,
     )
+
+
+@app.post("/map/analyze", response_model=JobStatusResponse)
+async def analyze_map_location(request: MapAnalysisRequest, background_tasks: BackgroundTasks):
+    """Analyze a clicked map point from a recent public Sentinel-2 scene."""
+    query = request.query.strip()
+    if not query:
+        raise HTTPException(422, "Query must not be blank.")
+    job_id = request.job_id
+    try:
+        await trace_store.create_job(job_id, query)
+    except IntegrityError:
+        raise HTTPException(409, f"Job '{job_id}' already exists.") from None
+
+    background_tasks.add_task(
+        _run_map_job,
+        job_id=job_id,
+        query=query,
+        latitude=request.latitude,
+        longitude=request.longitude,
+    )
+    from datetime import datetime
+    now = datetime.utcnow().isoformat()
+    return JobStatusResponse(
+        job_id=job_id,
+        status=JobStatus.PENDING,
+        progress_message="Fetching public Sentinel-2 imagery",
+        created_at=now,
+        updated_at=now,
+    )
+
+
+async def _run_map_job(job_id: str, query: str, latitude: float, longitude: float):
+    """Fetch a point crop, then hand it to the normal agent pipeline."""
+    upload_id = f"map-{uuid.uuid4()}"
+    image_path = settings.upload_dir / f"{upload_id}.tif"
+    try:
+        await trace_store.update_job_status(
+            job_id, JobStatus.VALIDATING, "Finding recent public Sentinel-2 imagery..."
+        )
+        await fetch_sentinel_tile(
+            latitude,
+            longitude,
+            image_path,
+            stac_url=settings.imagery_stac_url,
+            collection=settings.imagery_collection,
+            days_back=settings.imagery_days_back,
+            max_cloud_cover=settings.imagery_max_cloud_cover,
+            tile_size=settings.imagery_tile_size,
+        )
+        await _run_job(
+            job_id=job_id,
+            query=query,
+            file_paths={upload_id: image_path},
+            image_roles={upload_id: "PRIMARY"},
+        )
+    except ImageryUnavailable as exc:
+        image_path.unlink(missing_ok=True)
+        await trace_store.update_job_status(
+            job_id, JobStatus.FAILED, "Imagery unavailable", str(exc)
+        )
+    except Exception as exc:
+        image_path.unlink(missing_ok=True)
+        logger.exception("Map analysis %s failed: %s", job_id, exc)
+        await trace_store.update_job_status(job_id, JobStatus.FAILED, "Map analysis failed", str(exc))
 
 
 async def _run_job(job_id: str, query: str, file_paths: dict, image_roles: dict):

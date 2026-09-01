@@ -218,6 +218,19 @@ class QueryRequest(BaseModel):
     )
 
 
+class MapAnalysisRequest(BaseModel):
+    """Analyze a map point using a recent public Sentinel-2 crop."""
+
+    job_id: str
+    query: str = Field(
+        default="What land cover type dominates this location?",
+        min_length=1,
+        max_length=1000,
+    )
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+
+
 class JobStatusResponse(BaseModel):
     job_id: str
     status: JobStatus

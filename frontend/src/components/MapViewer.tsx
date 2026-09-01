@@ -5,6 +5,9 @@ import type { EvidenceObject, UploadedImage } from "../types";
 interface Props {
   evidence: EvidenceObject | null;
   uploadedImages: UploadedImage[];
+  onMapClick?: (latitude: number, longitude: number) => void;
+  selectedLocation?: { latitude: number; longitude: number } | null;
+  analysisPending?: boolean;
 }
 
 /**
@@ -13,9 +16,21 @@ interface Props {
  * as image overlays when bbox_geo is available.
  * Falls back to a placeholder when no georeferenced data is present.
  */
-export function MapViewer({ evidence, uploadedImages }: Props) {
+export function MapViewer({
+  evidence,
+  uploadedImages,
+  onMapClick,
+  selectedLocation,
+  analysisPending = false,
+}: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<unknown>(null);
+  const clickMarker = useRef<unknown>(null);
+  const onMapClickRef = useRef(onMapClick);
+
+  useEffect(() => {
+    onMapClickRef.current = onMapClick;
+  }, [onMapClick]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -40,6 +55,11 @@ export function MapViewer({ evidence, uploadedImages }: Props) {
       }).addTo(map);
 
       leafletMap.current = map;
+      if (onMapClickRef.current) {
+        map.on("click", (event) => {
+          onMapClickRef.current?.(event.latlng.lat, event.latlng.lng);
+        });
+      }
 
       const uploadedBounds = uploadedImages
         .map((image) => image.metadata.bbox_wgs84)
@@ -119,6 +139,23 @@ export function MapViewer({ evidence, uploadedImages }: Props) {
     };
   }, [evidence, uploadedImages]);
 
+  useEffect(() => {
+    if (!leafletMap.current || !selectedLocation) return;
+    import("leaflet").then((L) => {
+      if (clickMarker.current) {
+        (clickMarker.current as { remove: () => void }).remove();
+      }
+      const marker = L.marker([
+        selectedLocation.latitude,
+        selectedLocation.longitude,
+      ]).addTo(leafletMap.current as import("leaflet").Map);
+      marker.bindPopup(
+        analysisPending ? "Fetching Sentinel-2 imagery…" : "Map location selected",
+      ).openPopup();
+      clickMarker.current = marker;
+    });
+  }, [selectedLocation, analysisPending]);
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%", minHeight: 500 }}>
       <div ref={mapRef} style={{ width: "100%", height: "100%", minHeight: 500, borderRadius: 10 }} />
@@ -139,7 +176,7 @@ export function MapViewer({ evidence, uploadedImages }: Props) {
         >
           <span style={{ fontSize: 36 }}>🛰️</span>
           <p style={{ margin: "8px 0 0", fontSize: 13, color: "#6b7280" }}>
-            Georeferenced overlays will appear here after analysis
+            Click the map to analyze the latest public Sentinel-2 imagery
           </p>
         </div>
       )}

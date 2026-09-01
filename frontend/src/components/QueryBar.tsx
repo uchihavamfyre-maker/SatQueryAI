@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 const EXAMPLE_QUERIES = [
   "What land cover type dominates this image?",
   "Describe the scene in this satellite image.",
@@ -12,13 +10,14 @@ const EXAMPLE_QUERIES = [
 interface Props {
   onSubmit: (query: string) => void;
   disabled: boolean;
+  value: string;
+  onChange: (query: string) => void;
 }
 
-export function QueryBar({ onSubmit, disabled }: Props) {
-  const [query, setQuery] = useState("");
+export function QueryBar({ onSubmit, disabled, value, onChange }: Props) {
 
   const submit = () => {
-    const q = query.trim();
+    const q = value.trim();
     if (q) onSubmit(q);
   };
 
@@ -27,8 +26,8 @@ export function QueryBar({ onSubmit, disabled }: Props) {
       <div style={{ display: "flex", gap: 8 }}>
         <input
           type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !disabled && submit()}
           placeholder="Ask a question about your satellite image(s)…"
           disabled={disabled}
@@ -44,16 +43,16 @@ export function QueryBar({ onSubmit, disabled }: Props) {
         />
         <button
           onClick={submit}
-          disabled={disabled || !query.trim()}
+          disabled={disabled || !value.trim()}
           style={{
             padding: "10px 20px",
-            background: disabled || !query.trim() ? "#9ca3af" : "#0284c7",
+            background: disabled || !value.trim() ? "#9ca3af" : "#0284c7",
             color: "#fff",
             border: "none",
             borderRadius: 8,
             fontSize: 14,
             fontWeight: 600,
-            cursor: disabled || !query.trim() ? "not-allowed" : "pointer",
+            cursor: disabled || !value.trim() ? "not-allowed" : "pointer",
             whiteSpace: "nowrap",
           }}
         >
@@ -66,7 +65,7 @@ export function QueryBar({ onSubmit, disabled }: Props) {
         {EXAMPLE_QUERIES.map((q) => (
           <button
             key={q}
-            onClick={() => setQuery(q)}
+            onClick={() => onChange(q)}
             disabled={disabled}
             style={{
               fontSize: 11,

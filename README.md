@@ -172,6 +172,7 @@ python scripts/finetune_rsvqa.py \
 |----------|--------|-------------|
 | `/upload` | POST | Upload a satellite image. Returns `upload_id`. |
 | `/query` | POST | Submit a query with image references. Returns `job_id`. |
+| `/map/analyze` | POST | Analyze a clicked latitude/longitude using a recent public Sentinel-2 crop (no API key required). |
 | `/job/{id}/status` | GET | Poll job status. |
 | `/job/{id}/result` | GET | Get final result + evidence object. |
 | `/job/{id}/trace` | GET | Get full auditable execution trace. |

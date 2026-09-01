@@ -136,7 +136,36 @@ curl -X POST \
 
 ---
 
-### 3. Get Job Status
+### 3. Analyze Map Location
+
+**Endpoint:** `POST /map/analyze`
+
+**Description:** Submit a map-click analysis without uploading an image. The
+backend searches the public Earth Search Sentinel-2 L2A STAC catalog and reads
+only a small crop around the requested point. No imagery API credentials are
+required. Results are returned through the normal job status/result endpoints.
+
+**Request:**
+```json
+{
+  "job_id": "job-map-123",
+  "query": "What land cover type dominates this location?",
+  "latitude": 28.6139,
+  "longitude": 77.2090
+}
+```
+
+**Error responses:**
+- **422 Unprocessable Entity:** Coordinates or query are invalid
+- **409 Conflict:** Job ID already exists
+
+If the catalog has no suitable scene or is temporarily unavailable, the
+queued job reaches `FAILED` and `/job/{id}/result` contains a user-facing
+explanation; the request itself still returns the normal queued response.
+
+---
+
+### 4. Get Job Status
 
 **Endpoint:** `GET /job/{job_id}/status`
 
@@ -179,7 +208,7 @@ curl -H "X-API-Key: your-key" \
 
 ---
 
-### 4. Get Job Result
+### 5. Get Job Result
 
 **Endpoint:** `GET /job/{job_id}/result`
 
@@ -231,7 +260,7 @@ curl -H "X-API-Key: your-key" \
 
 ---
 
-### 5. Get Execution Trace
+### 6. Get Execution Trace
 
 **Endpoint:** `GET /job/{job_id}/trace`
 
@@ -293,7 +322,7 @@ curl -H "X-API-Key: your-key" \
 
 ---
 
-### 6. Health Check
+### 7. Health Check
 
 **Endpoint:** `GET /health`
 

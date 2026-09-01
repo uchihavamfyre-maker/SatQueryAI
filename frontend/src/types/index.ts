@@ -41,6 +41,13 @@ export interface QueryRequest {
   image_roles: Record<string, InputRole>; // upload_id → role
 }
 
+export interface MapAnalysisRequest {
+  job_id: string;
+  query: string;
+  latitude: number;
+  longitude: number;
+}
+
 // ─── Job ──────────────────────────────────────────────────────────────────────
 
 export interface JobStatusResponse {

@@ -69,6 +69,13 @@ class Settings(BaseSettings):
     max_image_bytes: int = 500 * 1024 * 1024  # 500 MB
     max_image_pixels: int = 100_000_000
 
+    # Public map-click imagery (Earth Search Sentinel-2 COGs; no credentials)
+    imagery_stac_url: str = "https://earth-search.aws.element84.com/v1/search"
+    imagery_collection: str = "sentinel-2-l2a"
+    imagery_days_back: int = 180
+    imagery_max_cloud_cover: float = 30.0
+    imagery_tile_size: int = 512
+
     # API
     cors_origins: str | list[str] = [
         "http://localhost:5173",
