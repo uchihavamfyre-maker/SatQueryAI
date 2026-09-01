@@ -126,7 +126,10 @@ export default function App() {
 
         {/* Right panel — map */}
         <div style={{ minHeight: 0, height: "100%", padding: 16, background: "#f1f5f9" }}>
-          <MapViewer evidence={result?.evidence ?? null} />
+          <MapViewer
+            evidence={result?.evidence ?? null}
+            uploadedImages={images}
+          />
         </div>
       </div>
     </div>

@@ -1,9 +1,10 @@
 import { useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
-import type { EvidenceObject } from "../types";
+import type { EvidenceObject, UploadedImage } from "../types";
 
 interface Props {
   evidence: EvidenceObject | null;
+  uploadedImages: UploadedImage[];
 }
 
 /**
@@ -12,7 +13,7 @@ interface Props {
  * as image overlays when bbox_geo is available.
  * Falls back to a placeholder when no georeferenced data is present.
  */
-export function MapViewer({ evidence }: Props) {
+export function MapViewer({ evidence, uploadedImages }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const leafletMap = useRef<unknown>(null);
 
@@ -39,6 +40,33 @@ export function MapViewer({ evidence }: Props) {
       }).addTo(map);
 
       leafletMap.current = map;
+
+      const uploadedBounds = uploadedImages
+        .map((image) => image.metadata.bbox_wgs84)
+        .filter(
+          (bbox): bbox is {
+            minx: number;
+            miny: number;
+            maxx: number;
+            maxy: number;
+          } => Boolean(bbox) && typeof bbox === "object",
+        );
+
+      if (!evidence && uploadedBounds.length > 0) {
+        const bounds = L.latLngBounds(
+          [uploadedBounds[0].miny, uploadedBounds[0].minx],
+          [uploadedBounds[0].maxy, uploadedBounds[0].maxx],
+        );
+        map.fitBounds(bounds, { padding: [40, 40] });
+        L.rectangle(bounds, {
+          color: "#16a34a",
+          weight: 2,
+          fillOpacity: 0.12,
+        })
+          .bindTooltip(`Uploaded image: ${uploadedImages[0].filename}`)
+          .addTo(map);
+        return;
+      }
 
       if (!evidence) return;
 
@@ -89,12 +117,13 @@ export function MapViewer({ evidence }: Props) {
         leafletMap.current = null;
       }
     };
-  }, [evidence]);
+  }, [evidence, uploadedImages]);
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100%", minHeight: 500 }}>
       <div ref={mapRef} style={{ width: "100%", height: "100%", minHeight: 500, borderRadius: 10 }} />
-      {!evidence && (
+      {!evidence &&
+        !uploadedImages.some((image) => Boolean(image.metadata.bbox_wgs84)) && (
         <div
           style={{
             position: "absolute",

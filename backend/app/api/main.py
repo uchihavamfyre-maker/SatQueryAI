@@ -106,6 +106,18 @@ async def upload_image(file: UploadFile = File(...)):
         import rasterio
         with rasterio.open(save_path) as ds:
             modality = detect_modality(ds)
+            bbox_wgs84 = None
+            if ds.crs:
+                from rasterio.warp import transform_bounds
+
+                bounds = transform_bounds(ds.crs, "EPSG:4326", *ds.bounds)
+                bbox_wgs84 = {
+                    "minx": bounds[0],
+                    "miny": bounds[1],
+                    "maxx": bounds[2],
+                    "maxy": bounds[3],
+                    "crs": "EPSG:4326",
+                }
             quick_meta = {
                 "bands": ds.count,
                 "width": ds.width,
@@ -113,6 +125,7 @@ async def upload_image(file: UploadFile = File(...)):
                 "crs": ds.crs.to_string() if ds.crs else None,
                 "dtype": str(ds.dtypes[0]),
                 "has_georef": ds.transform is not None,
+                "bbox_wgs84": bbox_wgs84,
             }
     except Exception:
         pass  # PNG/JPEG — no rasterio metadata
