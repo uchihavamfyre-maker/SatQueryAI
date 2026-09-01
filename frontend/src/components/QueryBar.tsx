@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const EXAMPLE_QUERIES = [
   "What land cover type dominates this image?",

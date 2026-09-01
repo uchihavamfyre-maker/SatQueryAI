@@ -1,10 +1,15 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { ImageUploadPanel } from "./components/ImageUploadPanel";
 import { QueryBar } from "./components/QueryBar";
 import { ResultsPanel } from "./components/ResultsPanel";
 import { MapViewer } from "./components/MapViewer";
 import { pollUntilDone, submitQuery } from "./api/client";
-import type { JobResultResponse, JobStatusResponse, UploadedImage } from "./types";
+import type {
+  InputRole,
+  JobResultResponse,
+  JobStatusResponse,
+  UploadedImage,
+} from "./types";
 import { v4 as uuidv4 } from "./utils/uuid";
 
 export default function App() {
@@ -24,7 +29,7 @@ export default function App() {
     setRunning(true);
 
     const jobId = uuidv4();
-    const imageRoles: Record<string, string> = {};
+    const imageRoles: Record<string, InputRole> = {};
     images.forEach((img) => {
       imageRoles[img.uploadId] = img.role;
     });

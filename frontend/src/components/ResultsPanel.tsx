@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import type { EvidenceObject, JobResultResponse } from "../types";
+import { useState } from "react";
+import type { JobResultResponse } from "../types";
 
 interface Props {
   result: JobResultResponse | null;
