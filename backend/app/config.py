@@ -7,6 +7,14 @@ from pydantic_settings import BaseSettings
 BASE_DIR = Path(__file__).resolve().parent.parent  # satquery/backend/
 
 
+def _normalize_database_url(url: str) -> str:
+    if url.startswith("postgres://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
+    return url
+
+
 def _default_data_dir() -> Path:
     return Path(os.getenv("DATA_DIR", BASE_DIR.parent / "data"))
 
@@ -58,6 +66,8 @@ class Settings(BaseSettings):
     @classmethod
     def derive_storage_paths(cls, values):
         values = dict(values or {})
+        if values.get("database_url"):
+            values["database_url"] = _normalize_database_url(values["database_url"])
         data_dir = Path(values.get("data_dir") or _default_data_dir())
         values["data_dir"] = data_dir
         values.setdefault("upload_dir", data_dir / "uploads")

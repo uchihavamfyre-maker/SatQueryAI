@@ -250,7 +250,9 @@ _FRONTEND = settings.frontend_dist / "index.html"
 _LEGACY_FRONTEND = Path(__file__).resolve().parent.parent.parent.parent / "frontend" / "index.html"
 
 if settings.frontend_dist.is_dir():
-    app.mount("/assets", StaticFiles(directory=settings.frontend_dist / "assets"), name="assets")
+    _frontend_assets = settings.frontend_dist / "assets"
+    if _frontend_assets.is_dir():
+        app.mount("/assets", StaticFiles(directory=_frontend_assets), name="assets")
 
 @app.get("/", response_class=HTMLResponse)
 async def serve_frontend():
