@@ -54,27 +54,20 @@ export function ImageUploadPanel({ images, onChange }: Props) {
   );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className="upload-panel">
       {/* Drop zone */}
       <div
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
         onClick={() => inputRef.current?.click()}
-        style={{
-          border: "2px dashed #0ea5e9",
-          borderRadius: 12,
-          padding: "24px 16px",
-          textAlign: "center",
-          cursor: "pointer",
-          background: "#f0f9ff",
-        }}
+        className="drop-zone"
       >
-        <div style={{ fontSize: 28, marginBottom: 6 }}>📡</div>
-        <p style={{ margin: 0, fontSize: 14, color: "#374151" }}>
+        <div className="drop-icon">⌁</div>
+        <p className="drop-title">
           Drop <strong>GeoTIFF / PNG / JPEG</strong> here or{" "}
-          <span style={{ color: "#0284c7" }}>browse</span>
+          <span className="accent-text">browse</span>
         </p>
-        <p style={{ margin: "4px 0 0", fontSize: 12, color: "#9ca3af" }}>
+        <p className="drop-hint">
           GeoTIFF required for bi-temporal &amp; cross-modal tasks
         </p>
         <input
@@ -88,55 +81,37 @@ export function ImageUploadPanel({ images, onChange }: Props) {
       </div>
 
       {uploading && (
-        <p style={{ fontSize: 13, color: "#0284c7", margin: 0 }}>Uploading…</p>
+        <p className="upload-status">Uploading…</p>
       )}
       {error && (
-        <p style={{ fontSize: 13, color: "#ef4444", margin: 0 }}>{error}</p>
+        <p className="upload-error">{error}</p>
       )}
 
       {/* Uploaded image list */}
       {images.map((img) => (
         <div
           key={img.uploadId}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            background: "#fff",
-            border: "1px solid #e5e7eb",
-            borderRadius: 8,
-            padding: "10px 12px",
-          }}
+          className="file-card"
         >
           {img.previewUrl ? (
             <img
               src={img.previewUrl}
               alt={img.filename}
-              style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 6 }}
+              className="file-preview"
             />
           ) : (
             <div
-              style={{
-                width: 48,
-                height: 48,
-                background: "#f3f4f6",
-                borderRadius: 6,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 10,
-                color: "#9ca3af",
-              }}
+              className="file-preview file-type"
             >
               {img.format}
             </div>
           )}
 
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div className="file-details">
+            <p className="file-name">
               {img.filename}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: "#9ca3af" }}>
+            <p className="file-meta">
               {img.modality} · {img.format}
               {img.metadata.bands ? ` · ${img.metadata.bands as number} bands` : ""}
               {img.metadata.width
@@ -156,7 +131,7 @@ export function ImageUploadPanel({ images, onChange }: Props) {
                 ),
               )
             }
-            style={{ fontSize: 12, border: "1px solid #d1d5db", borderRadius: 4, padding: "2px 4px" }}
+            className="role-select"
           >
             {ROLES.map((r) => (
               <option key={r} value={r}>{r}</option>
@@ -165,7 +140,7 @@ export function ImageUploadPanel({ images, onChange }: Props) {
 
           <button
             onClick={() => onChange(images.filter((i) => i.uploadId !== img.uploadId))}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18, lineHeight: 1 }}
+            className="remove-button"
           >
             ×
           </button>

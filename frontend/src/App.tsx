@@ -75,24 +75,17 @@ export default function App() {
   }, [query, running, runJob]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#f8fafc", fontFamily: "system-ui, sans-serif" }}>
+    <div className="app-shell">
       {/* Header */}
       <header
-        style={{
-          background: "#0c4a6e",
-          color: "#fff",
-          padding: "14px 24px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}
+        className="app-header"
       >
-        <span style={{ fontSize: 24 }}>🛰️</span>
+        <span className="brand-mark">✦</span>
         <div>
-          <h1 style={{ margin: 0, fontSize: 18, fontWeight: 700, letterSpacing: 0.5 }}>
+          <h1 className="brand-title">
             SatQuery AI
           </h1>
-          <p style={{ margin: 0, fontSize: 11, color: "#7dd3fc" }}>
+          <p className="brand-subtitle">
             Agentic Vision-Language Assistant for Remote Sensing · SIH26167
           </p>
         </div>
@@ -100,32 +93,18 @@ export default function App() {
 
       {/* Main layout */}
       <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "360px 1fr",
-          gridTemplateRows: "1fr",
-          height: "calc(100vh - 56px)",
-          gap: 0,
-        }}
+        className="workspace"
       >
         {/* Left panel */}
         <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
-            padding: 16,
-            overflowY: "auto",
-            borderRight: "1px solid #e5e7eb",
-            background: "#fff",
-          }}
+          className="control-panel"
         >
-          <section>
+          <section className="panel-section">
             <SectionHeader>Images</SectionHeader>
             <ImageUploadPanel images={images} onChange={setImages} />
           </section>
 
-          <section>
+          <section className="panel-section">
             <SectionHeader>Query</SectionHeader>
             <QueryBar
               onSubmit={handleQuery}
@@ -136,12 +115,12 @@ export default function App() {
           </section>
 
           {globalError && (
-            <p style={{ margin: 0, fontSize: 13, color: "#dc2626", background: "#fff1f2", padding: "8px 12px", borderRadius: 8 }}>
+            <p className="error-banner">
               {globalError}
             </p>
           )}
 
-          <section>
+          <section className="panel-section results-section">
             <SectionHeader>Results</SectionHeader>
             <ResultsPanel
               result={result}
@@ -152,7 +131,7 @@ export default function App() {
         </div>
 
         {/* Right panel — map */}
-        <div style={{ minHeight: 0, height: "100%", padding: 16, background: "#f1f5f9" }}>
+        <div className="map-panel">
           <MapViewer
             evidence={result?.evidence ?? null}
             uploadedImages={images}
@@ -168,16 +147,7 @@ export default function App() {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <p
-      style={{
-        margin: "0 0 8px",
-        fontSize: 11,
-        fontWeight: 700,
-        color: "#6b7280",
-        textTransform: "uppercase",
-        letterSpacing: 1,
-      }}
-    >
+    <p className="section-header">
       {children}
     </p>
   );

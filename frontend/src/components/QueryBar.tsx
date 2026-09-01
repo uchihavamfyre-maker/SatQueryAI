@@ -22,8 +22,8 @@ export function QueryBar({ onSubmit, disabled, value, onChange }: Props) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", gap: 8 }}>
+    <div className="query-bar">
+      <div className="query-row">
         <input
           type="text"
           value={value}
@@ -31,51 +31,25 @@ export function QueryBar({ onSubmit, disabled, value, onChange }: Props) {
           onKeyDown={(e) => e.key === "Enter" && !disabled && submit()}
           placeholder="Ask a question about your satellite image(s)…"
           disabled={disabled}
-          style={{
-            flex: 1,
-            padding: "10px 14px",
-            fontSize: 14,
-            border: "1px solid #d1d5db",
-            borderRadius: 8,
-            outline: "none",
-            background: disabled ? "#f9fafb" : "#fff",
-          }}
+          className="query-input"
         />
         <button
           onClick={submit}
           disabled={disabled || !value.trim()}
-          style={{
-            padding: "10px 20px",
-            background: disabled || !value.trim() ? "#9ca3af" : "#0284c7",
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: disabled || !value.trim() ? "not-allowed" : "pointer",
-            whiteSpace: "nowrap",
-          }}
+          className="primary-button"
         >
           Analyse
         </button>
       </div>
 
       {/* Example queries */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+      <div className="suggestions">
         {EXAMPLE_QUERIES.map((q) => (
           <button
             key={q}
             onClick={() => onChange(q)}
             disabled={disabled}
-            style={{
-              fontSize: 11,
-              padding: "3px 8px",
-              background: "#f0f9ff",
-              border: "1px solid #bae6fd",
-              borderRadius: 20,
-              color: "#0369a1",
-              cursor: disabled ? "not-allowed" : "pointer",
-            }}
+            className="suggestion-chip"
           >
             {q}
           </button>
