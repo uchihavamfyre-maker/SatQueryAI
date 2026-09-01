@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import "leaflet/dist/leaflet.css";
 import type { EvidenceObject } from "../types";
 
 interface Props {
