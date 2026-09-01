@@ -6,13 +6,20 @@ RUN npm install
 COPY frontend ./
 RUN npm run build
 
-FROM python:3.12-slim
+FROM python:3.12-slim-bullseye
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        libtiff5 \
+        libgl1 \
+        libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY backend/requirements.txt ./backend/requirements.txt
 COPY backend/requirements-lite.txt ./backend/requirements-lite.txt
 ARG INSTALL_HEAVY_MODELS=false
