@@ -19,6 +19,7 @@ def _normalize_database_url(url: str) -> str:
     query = dict(parse_qsl(parsed.query, keep_blank_values=True))
     if query.pop("sslmode", None) == "require":
         query["ssl"] = "require"
+    query.pop("channel_binding", None)
     return urlunsplit(
         ("postgresql+asyncpg", parsed.netloc, parsed.path, urlencode(query), parsed.fragment)
     )
