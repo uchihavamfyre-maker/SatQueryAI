@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 
 from pydantic import model_validator
@@ -17,6 +18,20 @@ def _normalize_database_url(url: str) -> str:
 
 def _default_data_dir() -> Path:
     return Path(os.getenv("DATA_DIR", BASE_DIR.parent / "data"))
+
+
+def _parse_cors_origins(value: str | list[str]) -> list[str]:
+    if isinstance(value, list):
+        return value
+    try:
+        parsed = json.loads(value)
+    except json.JSONDecodeError:
+        parsed = [origin.strip() for origin in value.split(",")]
+    if isinstance(parsed, str):
+        return [parsed]
+    if isinstance(parsed, list) and all(isinstance(origin, str) for origin in parsed):
+        return parsed
+    raise ValueError("CORS_ORIGINS must be a URL, comma-separated URLs, or a JSON list.")
 
 
 class Settings(BaseSettings):
@@ -46,7 +61,7 @@ class Settings(BaseSettings):
     max_image_pixels: int = 100_000_000
 
     # API
-    cors_origins: list[str] = [
+    cors_origins: str | list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost",
@@ -77,6 +92,10 @@ class Settings(BaseSettings):
         values.setdefault("models_dir", data_dir / "models")
         values.setdefault("database_url", f"sqlite+aiosqlite:///{data_dir / 'satquery.db'}")
         return values
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return _parse_cors_origins(self.cors_origins)
 
 
 settings = Settings()
