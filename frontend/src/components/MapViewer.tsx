@@ -92,8 +92,8 @@ export function MapViewer({ evidence }: Props) {
   }, [evidence]);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <div ref={mapRef} style={{ width: "100%", height: "100%", borderRadius: 10 }} />
+    <div style={{ position: "relative", width: "100%", height: "100%", minHeight: 500 }}>
+      <div ref={mapRef} style={{ width: "100%", height: "100%", minHeight: 500, borderRadius: 10 }} />
       {!evidence && (
         <div
           style={{
