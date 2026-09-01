@@ -1,6 +1,7 @@
 import os
 import json
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
@@ -9,11 +10,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent  # satquery/backend/
 
 
 def _normalize_database_url(url: str) -> str:
+    if not url.startswith(("postgres://", "postgresql://")):
+        return url
+
     if url.startswith("postgres://"):
-        return "postgresql+asyncpg://" + url.removeprefix("postgres://")
-    if url.startswith("postgresql://"):
-        return "postgresql+asyncpg://" + url.removeprefix("postgresql://")
-    return url
+        url = "postgresql://" + url.removeprefix("postgres://")
+    parsed = urlsplit(url)
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    if query.pop("sslmode", None) == "require":
+        query["ssl"] = "require"
+    return urlunsplit(
+        ("postgresql+asyncpg", parsed.netloc, parsed.path, urlencode(query), parsed.fragment)
+    )
 
 
 def _default_data_dir() -> Path:
