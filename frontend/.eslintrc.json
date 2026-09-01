@@ -1,0 +1,22 @@
+{
+  "extends": ["eslint:recommended", "plugin:react/recommended", "plugin:react-hooks/recommended", "plugin:@typescript-eslint/recommended"],
+  "ignorePatterns": ["dist", ".eslintrc.cjs"],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["react-refresh", "@typescript-eslint", "react-hooks"],
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react-refresh/only-export-components": ["warn", { "allowConstantExport": true }],
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "quotes": ["error", "double"],
+    "semi": ["error", "always"],
+    "comma-dangle": ["error", "always-multiline"]
+  },
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  }
+}

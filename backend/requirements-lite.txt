@@ -1,0 +1,21 @@
+# Free-tier CPU runtime dependencies
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic>=2.9.0
+pydantic-settings
+rasterio
+pyproj
+shapely
+numpy>=2
+scipy
+opencv-python-headless
+sqlalchemy
+aiosqlite
+alembic
+python-dotenv
+pyyaml
+pillow
+tqdm
+httpx
+aiofiles

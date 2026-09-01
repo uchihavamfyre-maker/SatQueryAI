@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: satquery-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: DEFAULT_DEVICE
+        value: cpu
+      - key: ENABLE_HEAVY_MODELS
+        value: "false"
+      - key: RSVQA_BACKEND
+        value: baseline
+      - key: CORS_ORIGINS
+        sync: false
+      - key: API_KEY
+        sync: false

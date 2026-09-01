@@ -1,0 +1,43 @@
+[MASTER]
+# Code analysis runs in a separate process
+jobs=0
+
+# Disable messages
+disable=
+    C0111,  # missing-docstring
+    R0903,  # too-few-public-methods
+    R0913,  # too-many-arguments
+    W0703,  # broad-except
+    C0302,  # too-many-lines
+    C0330,  # wrong-hanging-indentation
+
+# Bad whitespace
+max-line-length=100
+
+[LOGGING]
+# Logging modules that are allowed in the codebase
+logging-format-style=new
+
+[BASIC]
+# Naming rules
+good-names=
+    i, j, k, ex, Run, _
+
+[DESIGN]
+# Maximum number of attributes for a class
+max-attributes=10
+# Maximum number of arguments for function / method
+max-args=10
+# Maximum number of locals for function / method body
+max-locals=20
+# Maximum number of branches for function / method body
+max-branches=15
+
+[CLASSES]
+# List of method names used to declare an abstract method
+defining-attr-methods=__init__, __new__, setUp, asyncSetUp
+
+[EXCEPTIONS]
+# Exceptions that will emit a warning when being caught
+overgeneral-exceptions=
+    builtins.Exception

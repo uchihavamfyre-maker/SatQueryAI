@@ -1,0 +1,47 @@
+# Production requirements
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic>=2.9.0
+pydantic-settings
+
+# Geospatial
+rasterio
+pyproj
+shapely
+numpy>=2
+scipy
+opencv-python-headless
+
+# Deep Learning
+torch
+torchvision
+transformers
+timm
+einops
+huggingface-hub
+safetensors
+accelerate
+
+# Storage / DB
+sqlalchemy
+aiosqlite
+alembic
+
+# Utilities
+python-dotenv
+pyyaml
+pillow
+tqdm
+httpx
+aiofiles
+
+# Logging & Monitoring
+python-json-logger
+sentry-sdk
+
+# Performance
+redis>=4.0.0
+
+# Rate limiting & caching
+slowapi

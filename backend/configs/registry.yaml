@@ -1,0 +1,278 @@
+# SatQuery AI — Model / Tool Registry
+# Each entry defines a specialist capability available to the agentic controller.
+# The LLM orchestrator may only select tools listed here.
+
+tools:
+
+  - key: RS_VQA
+    display_name: "Remote Sensing Visual Question Answering"
+    model_name: "PaliGemma 3B — RSVQA-HR"
+    model_version: "1.0"
+    fine_tuned: true
+    fine_tune_dataset: "RSVQA-HR + BigEarthNet-derived QA pairs"
+    task: SINGLE_VQA
+    input_modalities: [OPTICAL, MULTISPECTRAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image: "float32 tensor [C, H, W], normalized"
+      question: "string, max 256 chars"
+    output_schema:
+      answer: "string"
+      confidence: "float [0,1]"
+      top_answers: "list[{answer: str, score: float}]"
+    permitted_parameters:
+      - name: top_k
+        type: int
+        default: 1
+        range: [1, 5]
+      - name: max_answer_length
+        type: int
+        default: 64
+        range: [1, 256]
+    compute: "GPU preferred; CPU fallback"
+    interface_class: "app.tools.rs_vqa.RSVQATool"
+    enabled: true
+    verification_status: "VERIFIED — official RSVQA-HR fine-tuned checkpoint; license acceptance required"
+    weights_url: "https://huggingface.co/google/paligemma-3b-ft-rsvqa-hr-224"
+
+  - key: RS_CAPTION
+    display_name: "Remote Sensing Scene Captioning"
+    model_name: "GeoChat-7B"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "GeoChat-Instruct (RS instruction dataset)"
+    task: SINGLE_CAPTION
+    input_modalities: [OPTICAL, MULTISPECTRAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image: "float32 tensor [3, H, W], normalized"
+      prompt: "string"
+    output_schema:
+      caption: "string"
+      confidence: "float [0,1]"
+    permitted_parameters:
+      - name: max_new_tokens
+        type: int
+        default: 256
+        range: [64, 512]
+      - name: temperature
+        type: float
+        default: 0.2
+        range: [0.0, 1.0]
+    compute: "GPU required (~13B params); 4-bit quantization supported"
+    interface_class: "app.tools.rs_caption.RSCaptionTool"
+    enabled: true
+    verification_status: "VERIFIED — official GeoChat repository/checkpoint adapter"
+    weights_url: "https://huggingface.co/MBZUAI/GeoChat"
+
+  - key: RS_GROUNDING
+    display_name: "Remote Sensing Text-Guided Region Grounding"
+    model_name: "GeoChat"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "GeoChat-Instruct"
+    task: SINGLE_GROUNDING
+    input_modalities: [OPTICAL, MULTISPECTRAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image: "float32 tensor [3, H, W]"
+      query: "string — region description to locate"
+    output_schema:
+      bboxes: "list[{x1,y1,x2,y2, label, score}] in pixel coords"
+      confidence: "float [0,1]"
+    permitted_parameters:
+      - name: confidence_threshold
+        type: float
+        default: 0.3
+        range: [0.1, 0.9]
+    compute: "GPU required"
+    interface_class: "app.tools.rs_grounding.RSGroundingTool"
+    enabled: true
+    verification_status: "VERIFIED — official GeoChat grounding capability; adapter parses grounding output"
+    weights_url: "https://huggingface.co/MBZUAI/GeoChat"
+
+  - key: RS_GROUNDING_FALLBACK
+    display_name: "SAM-based Mask Refinement"
+    model_name: "SAM-ViT-B"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "SA-1B"
+    task: SINGLE_GROUNDING
+    input_modalities: [OPTICAL, MULTISPECTRAL, SAR]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image: "uint8 numpy array [H, W, 3]"
+      boxes: "list[{x1,y1,x2,y2}] — prompts from RS_GROUNDING"
+    output_schema:
+      masks: "list[binary numpy array [H, W]]"
+      scores: "list[float]"
+    permitted_parameters:
+      - name: multimask_output
+        type: bool
+        default: false
+    compute: "GPU preferred; CPU feasible for ViT-B"
+    interface_class: "app.tools.sam_fallback.SAMFallbackTool"
+    enabled: true
+    verification_status: "VERIFIED"
+    weights_url: "https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth"
+
+  - key: CHANGE_DETECTION
+    display_name: "Bi-Temporal Change Detection"
+    model_name: "ChangeFormerV6"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "LEVIR-CD, WHU-CD"
+    task: BITEMPORAL_CHANGE_DETECT
+    input_modalities: [OPTICAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image_t1: "float32 tensor [3, H, W]"
+      image_t2: "float32 tensor [3, H, W]"
+    output_schema:
+      change_mask: "binary numpy array [H, W]"
+      change_prob: "float32 numpy array [H, W] — probability map"
+      change_ratio: "float — fraction of changed pixels"
+      confidence: "float [0,1]"
+    permitted_parameters:
+      - name: threshold
+        type: float
+        default: 0.5
+        range: [0.1, 0.9]
+    compute: "GPU recommended; ~50M params"
+    interface_class: "app.tools.change_detection.ChangeDetectionTool"
+    enabled: true
+    verification_status: "VERIFIED — official ChangeFormerV6 LEVIR checkpoint via setup script"
+    weights_url: "https://github.com/wgcban/ChangeFormer"
+
+  - key: CHANGE_CAPTION
+    display_name: "Bi-Temporal Change Captioning"
+    model_name: "DeltaVLM"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "ChangeChat-105k / LEVIR-CC"
+    task: BITEMPORAL_CHANGE_DETECT
+    input_modalities: [OPTICAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image_t1: "float32 tensor [3, H, W]"
+      image_t2: "float32 tensor [3, H, W]"
+      change_mask: "optional binary array [H, W]"
+    output_schema:
+      caption: "string"
+      confidence: "float [0,1]"
+    permitted_parameters:
+      - name: max_new_tokens
+        type: int
+        default: 128
+        range: [32, 256]
+    compute: "GPU recommended"
+    interface_class: "app.tools.change_caption.ChangeVLPTool"
+    enabled: true
+    verification_status: "REAL MODEL OPTIONAL — official DeltaVLM adapter; baseline fallback enabled"
+    weights_url: "https://github.com/hanlinwu/DeltaVLM"
+
+  - key: CHANGE_VQA
+    display_name: "Change-Based Visual Question Answering"
+    model_name: "DeltaVLM (CDVQA-compatible change QA)"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "ChangeChat-105k; CDVQA benchmark family"
+    task: BITEMPORAL_CHANGE_VQA
+    input_modalities: [OPTICAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image_t1: "float32 tensor [3, H, W]"
+      image_t2: "float32 tensor [3, H, W]"
+      question: "string"
+    output_schema:
+      answer: "string"
+      confidence: "float [0,1]"
+    permitted_parameters:
+      - name: top_k
+        type: int
+        default: 1
+        range: [1, 3]
+    compute: "GPU recommended"
+    interface_class: "app.tools.change_vqa.CDVQATool"
+    enabled: true
+    verification_status: "REAL MODEL OPTIONAL — DeltaVLM supports open-ended change QA; CDVQA dataset remains a benchmark source"
+    weights_url: "https://github.com/hanlinwu/DeltaVLM"
+
+  - key: OPTICAL_SAR_ANALYZER
+    display_name: "Optical + SAR Cross-Modal Analyzer"
+    model_name: "DualEncoderFusion-RS"
+    model_version: "1.0"
+    fine_tuned: true
+    fine_tune_dataset: "SEN12MS (Sentinel-1 SAR + Sentinel-2 optical) + BigEarthNet"
+    task: CROSS_MODAL_ANALYSIS
+    input_modalities: [OPTICAL, SAR]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      optical: "float32 tensor [C_opt, H, W]"
+      sar: "float32 tensor [C_sar, H, W]"
+    output_schema:
+      segmentation_mask: "int numpy array [H, W] — class indices"
+      class_probs: "float32 array [num_classes, H, W]"
+      class_areas: "dict[class_name, area_km2]"
+      confidence: "float [0,1]"
+      classes: ["built_up", "water", "vegetation", "bare_soil", "other"]
+    permitted_parameters:
+      - name: classes
+        type: list
+        default: ["built_up", "water", "vegetation", "bare_soil", "other"]
+    compute: "GPU optional; free Colab/Kaggle recommended for faster training"
+    interface_class: "app.tools.optical_sar.OpticalSARTool"
+    enabled: true
+    verification_status: "CUSTOM TRAINED MODEL OPTIONAL — deterministic optical/SAR baseline fallback is enabled"
+    weights_url: null
+
+  - key: SAR_PREPROCESS
+    display_name: "SAR Preprocessing (Speckle Filter + Calibration)"
+    model_name: "classical-sar-preprocess"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: null
+    task: PREPROCESSING
+    input_modalities: [SAR]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      sar_array: "float32 numpy array [C, H, W] — raw backscatter"
+    output_schema:
+      filtered_array: "float32 numpy array [C, H, W] — speckle-filtered, dB-scaled, normalized"
+    permitted_parameters:
+      - name: filter_type
+        type: str
+        default: "lee"
+        choices: ["lee", "frost", "median"]
+      - name: filter_size
+        type: int
+        default: 7
+        range: [3, 15]
+    compute: "CPU"
+    interface_class: "app.tools.sar_preprocess.SARPreprocessTool"
+    enabled: true
+    verification_status: "VERIFIED"
+    weights_url: null
+
+  - key: RS_EMBED
+    display_name: "Remote Sensing Image-Text Embedding"
+    model_name: "RemoteCLIP"
+    model_version: "1.0"
+    fine_tuned: false
+    fine_tune_dataset: "RS5M"
+    task: EMBEDDING
+    input_modalities: [OPTICAL, MULTISPECTRAL]
+    input_formats: [GEOTIFF, PNG, JPEG]
+    input_schema:
+      image: "float32 tensor [3, H, W]"
+      text: "optional string"
+    output_schema:
+      image_embedding: "float32 array [512]"
+      text_embedding: "optional float32 array [512]"
+      similarity: "optional float"
+    permitted_parameters: []
+    compute: "GPU preferred; CPU feasible"
+    interface_class: "app.tools.rs_embed.RSEmbedTool"
+    enabled: true
+    verification_status: "VERIFIED"
+    weights_url: "https://huggingface.co/chendelong/RemoteCLIP"
