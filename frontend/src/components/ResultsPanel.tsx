@@ -50,6 +50,15 @@ export function ResultsPanel({ result, status, progressMessage }: Props) {
           </span>
           <ConfidenceBadge confidence={ev.confidence} />
         </div>
+
+        {ev.supporting_text.length > 0 && (
+          <div className="result-card">
+            <p style={sectionTitle}>Evidence Source</p>
+            {ev.supporting_text.map((text) => (
+              <p key={text} className="result-muted">{text}</p>
+            ))}
+          </div>
+        )}
         <p className="answer-text">{ev.answer}</p>
         {ev.confidence_rationale && (
           <p className="result-muted rationale">{ev.confidence_rationale}</p>

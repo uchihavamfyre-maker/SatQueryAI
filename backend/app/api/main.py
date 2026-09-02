@@ -230,7 +230,7 @@ async def _run_map_job(job_id: str, query: str, latitude: float, longitude: floa
         await trace_store.update_job_status(
             job_id, JobStatus.VALIDATING, "Finding recent public Sentinel-2 imagery..."
         )
-        await fetch_sentinel_tile(
+        imagery_metadata = await fetch_sentinel_tile(
             latitude,
             longitude,
             image_path,
@@ -245,6 +245,7 @@ async def _run_map_job(job_id: str, query: str, latitude: float, longitude: floa
             query=query,
             file_paths={upload_id: image_path},
             image_roles={upload_id: "PRIMARY"},
+            source_metadata=imagery_metadata,
         )
     except ImageryUnavailable as exc:
         image_path.unlink(missing_ok=True)
@@ -257,10 +258,18 @@ async def _run_map_job(job_id: str, query: str, latitude: float, longitude: floa
         await trace_store.update_job_status(job_id, JobStatus.FAILED, "Map analysis failed", str(exc))
 
 
-async def _run_job(job_id: str, query: str, file_paths: dict, image_roles: dict):
+async def _run_job(
+    job_id: str,
+    query: str,
+    file_paths: dict,
+    image_roles: dict,
+    source_metadata: dict | None = None,
+):
     controller = get_controller()
     try:
-        await controller.process_query(job_id, query, file_paths, image_roles)
+        await controller.process_query(
+            job_id, query, file_paths, image_roles, source_metadata=source_metadata
+        )
     except Exception as e:
         logger.error(f"Background job {job_id} failed: {e}")
 

@@ -49,6 +49,7 @@ class AgentController:
         query: str,
         file_paths: dict[str, Path],   # {upload_id: absolute path}
         image_roles: dict[str, str],   # {upload_id: role string}
+        source_metadata: dict[str, object] | None = None,
     ) -> EvidenceObject:
         """
         Full pipeline:
@@ -89,6 +90,15 @@ class AgentController:
             await trace_store.update_job_status(job_id, JobStatus.FUSING, "Fusing evidence...")
 
             evidence = fuse_and_build_evidence(plan, geo_images)
+            if source_metadata:
+                scene_date = source_metadata.get("datetime")
+                cloud_cover = source_metadata.get("cloud_cover")
+                source_text = "Public Sentinel-2 scene"
+                if scene_date:
+                    source_text += f" captured {str(scene_date).split('T')[0]}"
+                if isinstance(cloud_cover, (int, float)):
+                    source_text += f" with {cloud_cover:.1f}% cloud cover"
+                evidence.supporting_text.append(source_text + ".")
 
             # ── Step 5: Persist ───────────────────────────────────────────────
             await trace_store.save_evidence(job_id, evidence)
