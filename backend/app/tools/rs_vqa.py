@@ -53,7 +53,8 @@ class RSVQATool(BaseTool):
             # It is explicitly fine-tuned on RSVQA-HR (224px) and gives a real
             # generative VQA model instead of a randomly initialized classifier.
             import os
-            if os.getenv("RSVQA_BACKEND", "paligemma").lower() == "paligemma":
+            # Keep the free deployment fast; heavyweight VLM loading is opt-in.
+            if os.getenv("RSVQA_BACKEND", "baseline").lower() == "paligemma":
                 try:
                     from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
                     model_id = os.getenv("RSVQA_MODEL_ID", "google/paligemma-3b-ft-rsvqa-hr-224")

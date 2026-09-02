@@ -72,9 +72,9 @@ class Settings(BaseSettings):
     # Public map-click imagery (Earth Search Sentinel-2 COGs; no credentials)
     imagery_stac_url: str = "https://earth-search.aws.element84.com/v1/search"
     imagery_collection: str = "sentinel-2-l2a"
-    imagery_days_back: int = 180
+    imagery_days_back: int = 90
     imagery_max_cloud_cover: float = 30.0
-    imagery_tile_size: int = 512
+    imagery_tile_size: int = 256
 
     # API
     cors_origins: str | list[str] = [
